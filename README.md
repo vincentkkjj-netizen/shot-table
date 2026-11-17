@@ -22,7 +22,7 @@
 ## 安装
 
 ```bash
-git clone https://github.com/<你>/shot-table.git
+git clone https://github.com/vincentkkjj-netizen/shot-table.git
 cd shot-table
 ./install.sh
 ```

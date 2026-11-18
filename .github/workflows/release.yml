@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-14 # Apple Silicon
+            arch: arm64
+          - os: macos-13 # Intel
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile OCR binary
+        run: |
+          cd scripts
+          swiftc -O -o ocr-${{ matrix.arch }} ocr.swift
+      - name: Package
+        run: |
+          mkdir -p dist
+          tar czf dist/ocr-${{ matrix.arch }}.tar.gz -C scripts ocr-${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocr-${{ matrix.arch }}
+          path: dist/*.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: ocr-arm64, path: dist }
+      - uses: actions/download-artifact@v4
+        with: { name: ocr-x86_64, path: dist }
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.tar.gz
+          generate_release_notes: true
